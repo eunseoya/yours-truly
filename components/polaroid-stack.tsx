@@ -1,29 +1,29 @@
-"use client"
-import Link from "next/link"
-import Image from "next/image"
-import { Plus } from "lucide-react"
-import { useItems } from "@/hooks/use-items"
-import { formatTimeAgo } from "@/lib/utils"
+"use client";
+import Link from "next/link";
+import Image from "next/image";
+import { Plus } from "lucide-react";
+import { useItems } from "@/hooks/use-items";
+import { formatTimeAgo } from "@/lib/utils";
 
 interface PolaroidStackProps {
-  itemIds: string[]
-  categoryName: string
+  itemIds: string[];
+  categoryName: string;
 }
 
 export function PolaroidStack({ itemIds, categoryName }: PolaroidStackProps) {
-  const { getItem } = useItems()
-  const items = itemIds.map((id) => getItem(id)).filter(Boolean)
+  const { getItem } = useItems();
+  const items = itemIds.map((id) => getItem(id)).filter(Boolean);
 
-  if (items.length === 0) return null
+  if (items.length === 0) return null;
 
   // Get the last updated item in this category
   const lastUpdatedItem = [...items].sort((a, b) => {
-    const aDate = new Date(a!.date.split(".").reverse().join("-"))
-    const bDate = new Date(b!.date.split(".").reverse().join("-"))
-    return bDate.getTime() - aDate.getTime()
-  })[0]
+    const aDate = new Date(a!.date.split(".").reverse().join("-"));
+    const bDate = new Date(b!.date.split(".").reverse().join("-"));
+    return bDate.getTime() - aDate.getTime();
+  })[0];
 
-  const lastUpdateTime = formatTimeAgo(lastUpdatedItem!.date)
+  const lastUpdateTime = formatTimeAgo(lastUpdatedItem!.date);
 
   return (
     <div className="mb-8">
@@ -65,5 +65,5 @@ export function PolaroidStack({ itemIds, categoryName }: PolaroidStackProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

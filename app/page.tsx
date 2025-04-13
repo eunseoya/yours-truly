@@ -1,6 +1,6 @@
-import Link from "next/link"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
   return (
@@ -15,21 +15,31 @@ export default function LandingPage() {
             className="opacity-70"
           />
         </div>
-        <h1 className="font-serif italic text-3xl text-gray-800 mt-4">Yours Truly</h1>
-        <p className="text-center text-gray-600 font-light">Your personal digital archive for cherished items and memories</p>
+        <h1 className="font-serif italic text-3xl text-gray-800 mt-4">
+          Yours Truly
+        </h1>
+        <p className="text-center text-gray-600 font-light">
+          Your personal digital archive for cherished items and memories
+        </p>
         <div className="flex flex-col w-full gap-4 mt-8">
           <Link href="/login" className="w-full">
-          <Button variant="outline" className="w-full border-gray-300 uppercase text-xs tracking-wider">
+            <Button
+              variant="outline"
+              className="w-full border-gray-300 uppercase text-xs tracking-wider"
+            >
               Log In
             </Button>
           </Link>
           <Link href="/signup" className="w-full">
-            <Button variant="outline" className="w-full border-gray-300 uppercase text-xs tracking-wider">
+            <Button
+              variant="outline"
+              className="w-full border-gray-300 uppercase text-xs tracking-wider"
+            >
               Sign Up
             </Button>
           </Link>
         </div>
       </div>
     </div>
-  )
+  );
 }

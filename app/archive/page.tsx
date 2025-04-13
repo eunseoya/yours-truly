@@ -1,21 +1,20 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Header } from "@/components/header"
-import { ItemStack } from "@/components/item-stack"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
-import { useItems } from "@/hooks/use-items"
+import Link from "next/link";
+import { Header } from "@/components/header";
+import { ItemStack } from "@/components/item-stack";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useItems } from "@/hooks/use-items";
+
 export default function ArchivePage() {
-  const { items } = useItems()
+  const { items } = useItems();
 
   return (
     <div className="min-h-screen bg-white">
       <Header />
       <main className="container max-w-md mx-auto px-4 py-6">
-        <div
-          className="columns-3 gap-4 space-y-4"
-        >
+        <div className="columns-3 gap-4 space-y-4">
           {items.map((item) => (
             <div key={item.id} className="break-inside-avoid mb-4">
               {/* Category label */}
@@ -41,6 +40,5 @@ export default function ArchivePage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
-

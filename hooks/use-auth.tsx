@@ -7,14 +7,13 @@ import { useRouter, usePathname } from "next/navigation"
 
 type User = {
   id: string
-  name: string
   email: string
 }
 
 type AuthContextType = {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
-  signup: (name: string, email: string, password: string) => Promise<boolean>
+  signup: (email: string, password: string) => Promise<boolean>
   logout: () => void
   isLoading: boolean
 }
@@ -26,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
-
+  // localStorage.clear();
   // Load user from localStorage on mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user")
@@ -74,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (email: string, password: string) => {
     setIsLoading(true)
 
     try {
@@ -92,7 +91,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Create new user
       const newUser = {
         id: Date.now().toString(),
-        name,
         email,
         password,
       }

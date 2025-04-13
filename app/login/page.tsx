@@ -1,46 +1,49 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useAuth } from "@/hooks/use-auth"
-import { Loader2 } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const { login, isLoading } = useAuth()
+  const router = useRouter();
+  const { login, isLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
-  })
-  const [error, setError] = useState("")
+  });
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+  const handleKeypadClick = async (value: string) => {
+    if (value === "clear") {
+      setPassword("");
+    } else if (value === "delete") {
+      setPassword((prev) => prev.slice(0, -1));
+    } else if (password.length < 4) {
+      const newPassword = password + value;
+      setPassword(newPassword);
 
-    if (!formData.email || !formData.password) {
-      setError("Please fill in all fields")
-      return
+      if (newPassword.length === 4) {
+        setError("");
+        const success = await login(formData.email, newPassword);
+        if (success) {
+          router.push("/home");
+        } else {
+          setError("Invalid email or passcode");
+          setPassword("");
+        }
+      }
     }
-
-    const success = await login(formData.email, formData.password)
-    if (success) {
-      router.push("/home")
-    } else {
-      setError("Invalid email or password")
-    }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-lightpink flex flex-col items-center justify-center p-4">
@@ -55,47 +58,65 @@ export default function LoginPage() {
               className="opacity-70"
             />
           </div>
-          <h1 className="font-serif italic text-3xl text-gray-800">Yours Truly</h1>
+          <h1 className="font-serif italic text-3xl text-gray-800">
+            Yours Truly
+          </h1>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl uppercase font-light mb-6 text-center">Log In</h2>
-
-          {error && <div className="mb-4 p-2 bg-red-50 text-red-500 rounded text-sm">{error}</div>}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="p-6 rounded-lg">
+          <form className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-light text-gray-700 mb-1">
-                Email
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="your@email.com"
-              />
+              <div className="mb-8 px-8">
+                {error && (
+                  <div className="mb-8 p-2 bg-white text-red-500 rounded text-center text-sm">
+                    {error}
+                  </div>
+                )}
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="your@email.com"
+                />
+              </div>
+
+              <div className="flex justify-center mb-10">
+                <div className="flex space-x-2">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className={`w-2 h-2 rounded-full ${
+                        index < password.length
+                          ? "bg-gray-800"
+                          : "border border-black"
+                      }`}
+                    ></div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-light text-gray-700 mb-1">
-                Password
-              </label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-              />
+              <div className="grid grid-cols-3 gap-2 justify-items-center">
+                {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", ""].map(
+                  (key, index) =>
+                    key ? (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handleKeypadClick(key)}
+                        className="p-4 w-16 h-16 border items-center border-black bg-white rounded-full text-gray-800 text-2xl font-light hover:bg-gray-300"
+                      >
+                        {key}
+                      </button>
+                    ) : (
+                      <div key={index} className="w-16 h-16"></div>
+                    ),
+                )}
+              </div>
             </div>
-
-            <Button type="submit" variant="outline" className="w-full uppercase text-xs tracking-wider" disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Log In
-            </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
@@ -109,5 +130,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

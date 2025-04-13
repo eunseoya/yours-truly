@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect, createContext, useContext } from "react"
-import type { Item, Memory } from "@/types"
+import { useState, useEffect, createContext, useContext } from "react";
+import type { Item, Memory } from "@/types";
 
 // Sample data with more detailed memories
 const initialItems: Item[] = [
   {
     id: "1",
     name: "Lip Gloss",
-    date: "01.03.25",
+    date: "01.03.24",
     from: "Paris - Beauty Store",
     story: "My favorite lip gloss that I use every day.",
     image: "/logo.png?height=300&width=300",
@@ -18,13 +18,14 @@ const initialItems: Item[] = [
     memories: [
       {
         id: "101",
-        date: "05.03.25",
-        description: "First time using this lip gloss for a special date night.",
+        date: "05.03.24",
+        description:
+          "First time using this lip gloss for a special date night.",
         image: "/logo.png?height=300&width=300",
       },
       {
         id: "102",
-        date: "10.03.25",
+        date: "10.03.24",
         description: "Used it for a photoshoot.",
         image: "/logo.png?height=300&width=300",
       },
@@ -87,7 +88,6 @@ const initialItems: Item[] = [
         description: "I can't imagine my life without her",
         image: "/logo.png?height=300&width=300",
       },
-      
     ],
   },
   {
@@ -98,8 +98,7 @@ const initialItems: Item[] = [
     story: "Beautiful vintage notebook with handmade paper.",
     image: "/logo.png?height=300&width=300",
     category: "NOTEBOOK",
-    memories: [
-    ],
+    memories: [],
   },
   {
     id: "4",
@@ -153,58 +152,68 @@ const initialItems: Item[] = [
       },
     ],
   },
-]
+];
 
 interface ItemsContextType {
-  items: Item[]
-  getItem: (id: string) => Item | undefined
-  addItem: (item: Item) => void
-  addMemory: (itemId: string, memory: Memory) => void
+  items: Item[];
+  getItem: (id: string) => Item | undefined;
+  addItem: (item: Item) => void;
+  addMemory: (itemId: string, memory: Memory) => void;
 }
 
-const ItemsContext = createContext<ItemsContextType | undefined>(undefined)
+const ItemsContext = createContext<ItemsContextType | undefined>(undefined);
 
 export function ItemsProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<Item[]>(initialItems)
+  const [items, setItems] = useState<Item[]>(initialItems);
 
   // Load items from localStorage on mount
   useEffect(() => {
-    const storedItems = localStorage.getItem("archiveItems")
+    const storedItems = localStorage.getItem("archiveItems");
     if (storedItems) {
-      setItems(JSON.parse(storedItems))
+      setItems(JSON.parse(storedItems));
     }
-  }, [])
+  }, []);
 
   // Save items to localStorage when they change
   useEffect(() => {
-    localStorage.setItem("archiveItems", JSON.stringify(items))
-  }, [items])
+    localStorage.setItem("archiveItems", JSON.stringify(items));
+  }, [items]);
 
   const getItem = (id: string) => {
-    return items.find((item) => item.id === id)
-  }
+    return items.find((item) => item.id === id);
+  };
 
   const addItem = (item: Item) => {
-    setItems((prev) => [...prev, item])
-  }
+    setItems((prev) => [...prev, item]);
+  };
 
   const addMemory = (itemId: string, memory: Memory) => {
     setItems((prev) =>
       prev.map((item) =>
         item.id === itemId
-          ? { ...item, memories: [...item.memories, { ...memory, image: memory.image || "/placeholder.svg" }] }
-          : item
-      )
-    )
-  }
+          ? {
+              ...item,
+              memories: [
+                ...item.memories,
+                { ...memory, image: memory.image || "/placeholder.svg" },
+              ],
+            }
+          : item,
+      ),
+    );
+  };
 
-  return <ItemsContext.Provider value={{ items, getItem, addItem, addMemory }}>{children}</ItemsContext.Provider>
+  return (
+    <ItemsContext.Provider value={{ items, getItem, addItem, addMemory }}>
+      {children}
+    </ItemsContext.Provider>
+  );
 }
 
 export function useItems() {
-  const context = useContext(ItemsContext)
+  const context = useContext(ItemsContext);
   if (context === undefined) {
-    throw new Error("useItems must be used within an ItemsProvider")
+    throw new Error("useItems must be used within an ItemsProvider");
   }
-  return context
+  return context;
 }

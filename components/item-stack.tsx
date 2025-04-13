@@ -1,35 +1,36 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import Image from "next/image"
-import { Plus } from "lucide-react"
-import { formatTimeAgo } from "@/lib/utils"
-import type { Item } from "@/types"
-
+import Link from "next/link";
+import Image from "next/image";
+import { Plus } from "lucide-react";
+import { formatTimeAgo, isItemUnused } from "@/lib/utils";
+import type { Item } from "@/types";
 interface ItemStackProps {
-  item: Item
+  item: Item;
 }
 
 export function ItemStack({ item }: ItemStackProps) {
   // Calculate how many polaroids to show in the stack (item + memories)
-  const totalPolaroids = item.memories.length + 1
+  const totalPolaroids = item.memories.length + 1;
 
   // Create an array for rendering the stack
-  const stackItems = Array.from({ length: totalPolaroids }, (_, i) => i)
+  const stackItems = Array.from({ length: totalPolaroids }, (_, i) => i);
 
   // Format the last update time
-  const lastUpdateTime = formatTimeAgo(item.date)
+  const lastUpdateTime = formatTimeAgo(item.date);
 
-  // Check if this item has a notification (for demo, we'll use the bracelet category)
-  const hasNotification = item.category.toLowerCase() === "bracelet"
+  // Check if the item is unused (more than 1 month)
+  const unused = isItemUnused(item);
 
   // Adjust the height of the stack based on the number of polaroids
-  const stackHeight = 150 + (totalPolaroids - 1) * 25 // Base height + 8px per additional polaroid
+  const stackHeight = 150 + (totalPolaroids - 1) * 25; // Base height + 8px per additional polaroid
 
   return (
     <div className="relative">
       {/* Notification dot */}
-      {hasNotification && <div className="absolute -right-1 -top-1 w-4 h-4 bg-red-500 rounded-full z-10"></div>}
+      {unused && (
+        <div className="absolute border border-black -right-1 -top-1 w-4 h-4 bg-red-500 rounded-full z-10"></div>
+      )}
 
       {/* Polaroid stack */}
       <Link href={`/item/${item.id}`}>
@@ -45,7 +46,17 @@ export function ItemStack({ item }: ItemStackProps) {
               }}
             >
               <div className="relative aspect-square w-full h-[120px] mb-2">
-                <Image src={item.image || "/logo.png"} alt={item.name} fill className="object-cover" />
+                <Image
+                  src={item.image || "/logo.png"}
+                  alt={item.name}
+                  fill
+                  className={`object-cover ${unused ? "opacity-50" : ""}`}
+                />
+                {unused && (
+                  <div className="absolute inset-0 bg-white bg-opacity-50 backdrop-blur-sm flex items-center justify-center">
+                    {/* <div className="text-xs text-center text-gray-500 p-2">Unused for over a month</div> */}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -60,11 +71,11 @@ export function ItemStack({ item }: ItemStackProps) {
           </div>
         </Link>
         <div>
-        <p className= "text-[10px]">last update</p>
+          <p className="text-[10px]">last update</p>
 
-        <p className="ml-1 font-medium">{lastUpdateTime}</p>
+          <p className="ml-1 font-medium">{lastUpdateTime}</p>
         </div>
       </div>
     </div>
-  )
+  );
 }
