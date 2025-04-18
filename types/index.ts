@@ -11,6 +11,5 @@ export interface Item {
   from: string;
   story: string;
   image: string;
-  category: string;
   memories: Memory[];
 }

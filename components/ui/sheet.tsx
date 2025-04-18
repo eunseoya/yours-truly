@@ -53,6 +53,12 @@ interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {}
 
+/**
+ * Accessibility warning:
+ * SheetContent (DialogContent) requires a SheetTitle (DialogTitle) as a child
+ * for the component to be accessible for screen reader users.
+ * Always include <SheetTitle> inside <SheetContent>.
+ */
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps

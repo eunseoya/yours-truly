@@ -5,8 +5,8 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <main className="container max-w-md mx-auto px-4 py-6 font-light text-center">
-        <div className="mb-6 px-2 py-1 border border-black rounded-3xl text-sm uppercase inline-block bg-white">
+      <main className="container max-w-md mx-auto px-4 py-6 font-light text-xl text-center tracking-tighter">
+        <div className="mb-6 px-2 py-1 border border-black rounded-3xl text-sm uppercase  inline-block bg-white">
           About
         </div>
         <p className="mb-6">

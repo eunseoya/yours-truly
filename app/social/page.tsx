@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { User, Plus, MessageCircle } from "lucide-react";
+import { UserPlus, Plus, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function SocialPage() {
@@ -15,8 +15,11 @@ export default function SocialPage() {
       {/* Custom header with back button */}
       <div className="border-b py-4">
         <div className="container max-w-md mx-auto px-4 flex items-center justify-between">
-          <Link href="/home" className="p-1 rounded-full hover:bg-gray-100">
-            <User className="h-5 w-5" />
+          <Link
+            href="/social/add-friends"
+            className="p-1 rounded-full hover:bg-gray-100"
+          >
+            <UserPlus className="h-5 w-5" />
           </Link>
           <Link
             href="/home"

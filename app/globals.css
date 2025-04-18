@@ -60,7 +60,13 @@
 }
 
 .polaroid {
-  @apply bg-white p-2 shadow-md;
+  @apply bg-gray-50 p-2 pt-4 pb-6 shadow-md;
+  width: 100%;
+  max-width: 100%;
+}
+
+.polaroid-small {
+  @apply bg-gray-50 p-1 pt-2 pb-3 shadow-md;
   width: 100%;
   max-width: 100%;
 }

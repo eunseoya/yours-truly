@@ -5,21 +5,51 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatTimeAgo(dateStr: string): string {
+// Merge a date string (YYYY-MM-DD or DD.MM.YYYY) with the current time, return "dd.MM.yyyy HH:mm"
+export function mergeDateWithCurrentTime(dateStr: string): string {
+  let day: string, month: string, year: string;
+  if (dateStr.includes("-")) {
+    // yyyy-MM-dd
+    [year, month, day] = dateStr.split("-");
+  } else if (dateStr.includes(".")) {
+    // dd.MM.yyyy or dd.MM.yy
+    [day, month, year] = dateStr.split(".");
+    if (year.length === 2) year = `20${year}`;
+  } else {
+    return dateStr;
+  }
+  const now = new Date();
+  const [hh, mm] = now.toTimeString().split(" ")[0].split(":");
+  return `${day}.${month}.${year} ${hh}:${mm}`;
+}
+
+// Accepts Date or string (with or without time)
+export function formatTimeAgo(dateInput: string | Date): string {
   try {
-    // Parse date in format DD.MM.YY
-    const [day, month, year] = dateStr.split(".");
-    if (!day || !month || !year) return "Invalid date";
-
-    // Create a proper date with 20xx for the year
-    const fullYear = Number.parseInt(`20${year}`);
-    const date = new Date(
-      fullYear,
-      Number.parseInt(month) - 1,
-      Number.parseInt(day),
-    );
-
-    // Check if date is valid
+    let date: Date;
+    if (typeof dateInput === "string") {
+      // Try to parse with time
+      if (dateInput.includes(" ")) {
+        // dd.MM.yyyy HH:mm
+        const [dmy, hm] = dateInput.split(" ");
+        const [day, month, year] = dmy.split(".");
+        const [hh, mm] = hm.split(":");
+        date = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day),
+          Number(hh),
+          Number(mm)
+        );
+      } else {
+        // fallback to parseDate
+        const parsed = parseDate(dateInput);
+        if (!parsed) return "Invalid date";
+        date = parsed;
+      }
+    } else {
+      date = dateInput;
+    }
     if (isNaN(date.getTime())) return "Invalid date";
 
     const now = new Date();
@@ -29,7 +59,6 @@ export function formatTimeAgo(dateStr: string): string {
     const diffHr = Math.floor(diffMin / 60);
     const diffDays = Math.floor(diffHr / 24);
 
-    // Format based on time difference
     if (diffMin < 60) {
       return `${diffMin}m`;
     } else if (diffHr < 24) {
@@ -49,16 +78,30 @@ export function formatTimeAgo(dateStr: string): string {
 
 export function parseDate(dateStr: string): Date | null {
   try {
-    // Parse date in format DD.MM.YY
-    const [day, month, year] = dateStr.split(".");
+    // Support "dd.MM.yyyy" or "dd.MM.yy" or "dd.MM.yyyy HH:mm" or "dd.MM.yy HH:mm"
+    let [datePart, timePart] = dateStr.split(" ");
+    const [day, month, year] = datePart.split(".");
     if (!day || !month || !year) return null;
 
-    // Create a proper date with 20xx for the year
-    const fullYear = Number.parseInt(`20${year}`);
+    // Support both 2- and 4-digit year
+    const fullYear =
+      year.length === 2
+        ? Number.parseInt(`20${year}`)
+        : Number.parseInt(year);
+
+    let hours = 0, minutes = 0;
+    if (timePart) {
+      const [hh, mm] = timePart.split(":");
+      hours = Number.parseInt(hh);
+      minutes = Number.parseInt(mm);
+    }
+
     const date = new Date(
       fullYear,
       Number.parseInt(month) - 1,
       Number.parseInt(day),
+      hours,
+      minutes
     );
 
     // Check if date is valid
@@ -101,4 +144,38 @@ export function getLastUsedDate(item: Item): Date | null {
 
   // Return the most recent date
   return new Date(Math.max(...dates.map((date) => date.getTime())));
+}
+
+export function isValidEmail(email: string): boolean {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+// reformat yyyy-MM-dd to dd.MM.yyyy
+export function formatDate(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-");
+  return `${day}.${month}.${year}`;
+}
+
+// merge chosen date with current time and format as "dd.MM.yyyy HH:mm"
+export function formatDateTime(dateStr: string): string {
+  const [dayMonthYear] = [formatDate(dateStr)];
+  const now = new Date();
+  const [hh, mm] = now.toTimeString().split(" ")[0].split(":");
+  return `${dayMonthYear} ${hh}:${mm}`;
+}
+
+// read a File as DataURL
+export function readFileAsDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+export function checkName(name: string): boolean {
+  const re = /^[A-Za-z0-9 ]+$/;
+  return re.test(name);
 }

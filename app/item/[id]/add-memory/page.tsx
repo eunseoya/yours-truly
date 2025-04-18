@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Header } from "@/components/header";
-import { Button } from "@/components/ui/button";
-import { useItems } from "@/hooks/use-items";
 import { Plus } from "lucide-react";
+import { useItems } from "@/hooks/use-items";
+import { readFileAsDataURL } from "@/lib/utils";
 
-export default function AddMemoryPage() {
+function AddMemoryPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addMemory } = useItems();
   const params = useParams();
   const itemId = params.id as string;
@@ -20,14 +21,42 @@ export default function AddMemoryPage() {
     description: "",
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    // Pre-fill image from query param if present
+    const imageFromQuery = searchParams.get("image");
+    if (imageFromQuery) {
+      setImagePreview(imageFromQuery);
+    }
+    // Pre-fill image from localStorage if present
+    const localPhoto =
+      typeof window !== "undefined"
+        ? localStorage.getItem("yours-truly-captured-photo")
+        : null;
+    if (localPhoto) {
+      setImagePreview(localPhoto);
+      localStorage.removeItem("yours-truly-captured-photo");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === "camera-photo" && event.data.photo) {
+        setImagePreview(event.data.photo);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      const dataUrl = await readFileAsDataURL(file);
+      setImagePreview(dataUrl);
     }
   };
 
@@ -53,76 +82,87 @@ export default function AddMemoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
-      <main className="container max-w-md mx-auto p-4">
-        <h1 className="text-lg font-light mb-6">Add New Memory</h1>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex justify-center mb-6">
-            <div className="polaroid w-64">
+    <main className="container max-w-md mx-auto p-4">
+      <form onSubmit={handleSubmit} className="space-y-6 p-8">
+        <div className="flex justify-center mb-6">
+          <div className="polaroid w-64 h-96 pb-2">
+            <label
+              htmlFor="image-upload"
+              className="block w-full h-full cursor-pointer"
+            >
               {imagePreview ? (
-                <div className="relative aspect-square w-full mb-2">
+                <div className="relative w-full h-full">
                   <Image
                     src={imagePreview}
                     alt="Memory preview"
                     fill
-                    className="object-cover"
+                    className="object-cover w-full h-full"
+                  />
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
                   />
                 </div>
               ) : (
-                <div className="relative aspect-square w-full mb-2 bg-gray-100 flex items-center justify-center">
-                  <label htmlFor="image-upload" className="cursor-pointer">
-                    <Plus className="h-8 w-8 text-gray-400" />
-                    <input
-                      id="image-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageChange}
-                    />
-                  </label>
+                <div className="relative w-full h-full mb-2 bg-gray-100 flex items-center justify-center">
+                  <Plus className="h-8 w-8 text-gray-400" />
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
                 </div>
               )}
-            </div>
+            </label>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2 border-b border-gray-700">
+            <label className="text-xs text-gray-500">DATE:</label>
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              className="flex-1 p-2 focus:outline-none text-sm italic"
+            />
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs text-gray-500 block mb-1">DATE:</label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                className="w-full p-2 border-b border-gray-300 focus:outline-none text-sm"
-              />
-            </div>
+          <div className="flex items-start space-x-2 border-b border-gray-700">
+            <label className="text-xs text-gray-500 mt-2">DESCRIPTION:</label>
+            <input
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="flex-1 p-2 focus:outline-none text-sm italic resize-none"
+              placeholder="Write your memory here..."
+            />
+          </div>
 
-            <div>
-              <label className="text-xs text-gray-500 block mb-1">
-                DESCRIPTION:
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="w-full p-2 border-b border-gray-300 focus:outline-none text-sm min-h-[100px]"
-                placeholder="Write your memory here..."
-              />
-            </div>
+          <div className="relative flex justify-center mt-6">
+            <button className="w-12 h-12 rounded-full border border-gray-500 flex items-center justify-center">
+              <Plus className="h-10 w-10 stroke-[0.5]" />
+            </button>
           </div>
-          <div className="fixed bottom-8 right-8">
-            <Button
-              size="icon"
-              type="submit"
-              className="h-14 w-14 rounded-full border-2 border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-            >
-              <Plus className="h-8 w-8" />
-            </Button>
-          </div>
-        </form>
-      </main>
+        </div>
+      </form>
+    </main>
+  );
+}
+
+export default function AddMemoryPage() {
+  return (
+    <div className="min-h-screen bg-white">
+      <Header />
+      <Suspense fallback={<p>Loading...</p>}>
+        <AddMemoryPageContent />
+      </Suspense>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, LogOut } from "lucide-react";
+import { AlignJustify, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,12 +23,13 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
+            <SheetTrigger asChild> 
+            {/* svg three lines */}
+             <button className="w-12 h-12 flex items-center justify-center">
+                  <AlignJustify className="h-10 w-10 stroke-[0.5]" />
+              </button>
             </SheetTrigger>
-            <SheetContent className="w-screen h-screen p-4">
+            <SheetContent className="w-full h-screen p-4">
               <div className="flex flex-col h-full justify-between gap-4 text-4xl italic font-light">
                 <div className="flex flex-col items-end mt-4">
                   {/* top items */}
@@ -38,9 +39,10 @@ export function Header() {
                     </div>
                   )}
                   <Link href="/home">Home</Link>
-                  <Link href="/profile">Profile</Link>
                   <Link href="/camera">Camera</Link>
                   <Link href="/archive">Archive</Link>
+                  <Link href="/negatives">Negatives</Link>
+
                   <Link href="/social">Social</Link>
                 </div>
 

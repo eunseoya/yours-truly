@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Plus } from "lucide-react";
-import { formatTimeAgo, isItemUnused } from "@/lib/utils";
+import { formatTimeAgo, isItemUnused, getLastUsedDate } from "@/lib/utils";
 import type { Item } from "@/types";
 interface ItemStackProps {
   item: Item;
@@ -17,13 +17,14 @@ export function ItemStack({ item }: ItemStackProps) {
   const stackItems = Array.from({ length: totalPolaroids }, (_, i) => i);
 
   // Format the last update time
-  const lastUpdateTime = formatTimeAgo(item.date);
+  const lastUsedDate = getLastUsedDate(item);
+  const lastUpdateTime = lastUsedDate ? formatTimeAgo(lastUsedDate) : "N/A";
 
   // Check if the item is unused (more than 1 month)
   const unused = isItemUnused(item);
 
   // Adjust the height of the stack based on the number of polaroids
-  const stackHeight = 150 + (totalPolaroids - 1) * 25; // Base height + 8px per additional polaroid
+  const stackHeight = 175 + (totalPolaroids - 1) * 25; // Base height + 8px per additional polaroid
 
   return (
     <div className="relative">
@@ -38,14 +39,14 @@ export function ItemStack({ item }: ItemStackProps) {
           {stackItems.map((index) => (
             <div
               key={index}
-              className="polaroid absolute"
+              className="absolute polaroid shadow-md"
               style={{
                 top: `${index * 25}px`,
                 zIndex: totalPolaroids - index,
                 transform: `rotate(${index % 2 === 0 ? -2 : 2}deg)`,
               }}
             >
-              <div className="relative aspect-square w-full h-[120px] mb-2">
+              <div className="relative aspect-[3/4] w-full h-[15vh] mb-2  ">
                 <Image
                   src={item.image || "/logo.png"}
                   alt={item.name}
