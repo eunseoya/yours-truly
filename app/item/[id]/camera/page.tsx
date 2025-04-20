@@ -2,51 +2,43 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Header } from "@/components/header";
-import { useRouter, usePathname } from "next/navigation";
-import { Scan } from "lucide-react";
-export default function CameraPage() {
+import { useRouter, useParams } from "next/navigation";
+
+export default function ItemCameraPage() {
   const router = useRouter();
-  const pathname = usePathname();
+  const params = useParams();
+  const itemId = params.id as string;
   const [scanning, setScanning] = useState(true);
   const [photo, setPhoto] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [itemId, setItemId] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
   useEffect(() => {
     const startWebcam = async () => {
       if (!videoRef.current) return;
-
       try {
-        // Check if the browser supports media devices
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          console.error("Camera API not supported in this browser.");
           setScanning(false);
           return;
         }
-
-        // Ensure HTTPS is being used (required for camera access on Safari)
         if (
           window.location.protocol !== "https:" &&
           window.location.hostname !== "localhost"
         ) {
-          console.error("Camera access requires HTTPS.");
           setScanning(false);
           return;
         }
-
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         const constraints = isMobile
           ? { video: { facingMode: { exact: "environment" } } }
           : { video: true };
-
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         videoRef.current.srcObject = stream;
         videoRef.current.play();
         streamRef.current = stream;
         setScanning(true);
-      } catch (error: any) {
-        console.error("Failed to start webcam:", error);
+      } catch {
         setScanning(false);
       }
     };
@@ -61,37 +53,16 @@ export default function CameraPage() {
       }
     };
 
-    const handleRouteChange = () => {
-      const currentPath = window.location.pathname;
-      if (currentPath !== "/camera") {
-        stopWebcam();
-      } else {
-        startWebcam();
-      }
-    };
-
-    // Start webcam if on /camera
-    if (pathname === "/camera") {
-      startWebcam();
-    }
-
-    // Listen for route changes
+    startWebcam();
     window.addEventListener("beforeunload", stopWebcam);
-    const unsubscribe = router.events?.on?.(
-      "routeChangeStart",
-      handleRouteChange,
-    );
-
     return () => {
       stopWebcam();
       window.removeEventListener("beforeunload", stopWebcam);
-      if (unsubscribe) unsubscribe();
     };
-  }, [pathname, router]);
+  }, []);
 
   const takePhoto = () => {
     if (!videoRef.current) return;
-
     const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
@@ -105,7 +76,6 @@ export default function CameraPage() {
   const handleCameraClick = () => {
     let counter = 3;
     setCountdown(counter);
-
     const interval = setInterval(() => {
       counter -= 1;
       if (counter === 0) {
@@ -118,15 +88,11 @@ export default function CameraPage() {
     }, 1000);
   };
 
+  // Save photo to localStorage and go to add-memory page for this item
   const handlePolaroidClick = () => {
-    if (photo) {
-      // Save photo to localStorage instead of passing as query param
+    if (photo && itemId) {
       localStorage.setItem("yours-truly-captured-photo", photo);
-      if (itemId) {
-        router.push(`/item/${itemId}/add-memory`);
-      } else {
-        router.push(`/add`);
-      }
+      router.push(`/item/${itemId}/add-memory`);
     }
   };
 
@@ -181,7 +147,6 @@ export default function CameraPage() {
             </svg>
           </div>
         </div>
-
         {/*  Footer */}
         <div className="mt-auto flex items-center justify-center">
           {/* Polaroid photo capture */}
@@ -208,10 +173,10 @@ export default function CameraPage() {
           </div>
           <div className="ml-4">
             <p className="text-xs uppercase font-medium">
-              Take a photo of your new item
+              Take a photo for this item
             </p>
             <p className="text-xs text-gray-500 italic">
-              Let's not forget this one
+              Add a new memory instantly
             </p>
           </div>
         </div>

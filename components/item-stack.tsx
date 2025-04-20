@@ -10,11 +10,19 @@ interface ItemStackProps {
 }
 
 export function ItemStack({ item }: ItemStackProps) {
-  // Calculate how many polaroids to show in the stack (item + memories)
-  const totalPolaroids = item.memories.length + 1;
-
-  // Create an array for rendering the stack
-  const stackItems = Array.from({ length: totalPolaroids }, (_, i) => i);
+  // Show item card + all memories as stack
+  // Oldest memory at the top (lowest z), newest at the bottom (highest z before item card)
+  const memoriesSorted = [...item.memories].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+  const stackItems = [
+    ...memoriesSorted.map((memory) => ({
+      type: "memory" as const,
+      image: memory.image,
+      alt: memory.description || item.name,
+    })),
+    { type: "item" as const, image: item.image, alt: item.name },
+  ];
 
   // Format the last update time
   const lastUsedDate = getLastUsedDate(item);
@@ -23,36 +31,34 @@ export function ItemStack({ item }: ItemStackProps) {
   // Check if the item is unused (more than 1 month)
   const unused = isItemUnused(item);
 
-  // Adjust the height of the stack based on the number of polaroids
-  const stackHeight = 175 + (totalPolaroids - 1) * 25; // Base height + 8px per additional polaroid
-
   return (
     <div className="relative">
-      {/* Notification dot */}
-      {unused && (
-        <div className="absolute border border-black -right-1 -top-1 w-4 h-4 bg-red-500 rounded-full z-10"></div>
-      )}
-
       {/* Polaroid stack */}
       <Link href={`/item/${item.id}`}>
-        <div className="relative" style={{ height: `${stackHeight}px` }}>
-          {stackItems.map((index) => (
+        <div className="relative" style={{ height: `${175 + (stackItems.length - 1) * 25}px` }}>
+          {stackItems.map((stackItem, index) => (
             <div
               key={index}
               className="absolute polaroid shadow-md"
               style={{
-                top: `${index * 25}px`,
-                zIndex: totalPolaroids - index,
-                transform: `rotate(${index % 2 === 0 ? -2 : 2}deg)`,
+                top: `${index * 28}px`,
+                zIndex: index + 1, // oldest memory = 1, ..., item card = highest
+                transform: `rotate(${index % 2 === 0 ? -1 : 1}deg)`,
               }}
             >
-              <div className="relative aspect-[3/4] w-full h-[15vh] mb-2  ">
+{/* Notification dot on the topmost card */}
+                {unused && index === stackItems.length - 1 && (
+                  <div className="absolute border border-black -right-1 -top-1 w-5 h-5 bg-red-400 rounded-full z-20"></div>
+                )}
+              <div className="relative aspect-[3/4] w-full h-[120px] mb-2  ">
+              
                 <Image
-                  src={item.image || "/logo.png"}
-                  alt={item.name}
+                  src={stackItem.image || "/logo.png"}
+                  alt={stackItem.alt}
                   fill
                   className={`object-cover ${unused ? "opacity-50" : ""}`}
                 />
+                
                 {unused && (
                   <div className="absolute inset-0 bg-white bg-opacity-50 backdrop-blur-sm flex items-center justify-center">
                     {/* <div className="text-xs text-center text-gray-500 p-2">Unused for over a month</div> */}

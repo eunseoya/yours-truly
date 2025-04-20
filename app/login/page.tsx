@@ -34,7 +34,10 @@ export default function LoginPage() {
 
       if (newPassword.length === 4) {
         setError("");
-        const success = await login(formData.email, newPassword);
+        // add two zeroes to the password
+        const editedPassword = newPassword.padEnd(6, "0");
+        const success = await login(formData.email, editedPassword);
+        // const success = await login(formData.email, newPassword);
         if (success) {
           router.push("/home");
         } else {

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+
+import { usePathname } from "next/navigation";
 import { AlignJustify, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -9,10 +11,13 @@ import Image from "next/image";
 
 export function Header() {
   const { logout, user } = useAuth();
-
+  const pathname = usePathname();
+  const isArchivePage = pathname === "/archive" || pathname === "/negatives";
   return (
     <header className="border-b py-4">
-      <div className="container max-w-md mx-auto px-4 flex items-center justify-between">
+      {/*  special case: when on archive page, use lg:max-w-none */}
+      <div className={`container max-w-md mx-auto  px-4 flex items-center justify-between
+        ${isArchivePage ? "sm:max-w-none" : ""}`}>
         <div />
         <Link
           href="/home"

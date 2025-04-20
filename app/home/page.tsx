@@ -3,15 +3,17 @@ import Image from "next/image";
 import { Header } from "@/components/header";
 import { Barcode } from "@/components/barcode";
 import { useAuth } from "@/hooks/use-auth";
-import { usePhotoUpload } from "@/hooks/use-photo-upload";
-import { useState } from "react";
+import { useItems } from "@/hooks/use-items";
+import { getLastMemoryDateForAllItems } from "@/lib/utils";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 export default function HomePage() {
-  const barcodeValue = 1234502920120; // Example barcode value
+  const { items } = useItems();
   const { user } = useAuth();
-  const { photo: profilePhoto, handlePhotoUpload } =
-    usePhotoUpload("/logo.png");
+
+  const lastMemoryDate = getLastMemoryDateForAllItems(items);
+  const barcodeValue = 1234502920120; // Example barcode value
 
   const totalItems = 0.0;
   const totalMemories = 0.0;
@@ -26,6 +28,32 @@ export default function HomePage() {
   ];
 
   const [showReceiptFront, setShowReceiptFront] = useState(true);
+
+  // Persist profile photo in localStorage
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+
+  // Unique key for each user (fallback to 'guest')
+  const photoStorageKey = `profile-photo-${user?.id || "guest"}`;
+
+  useEffect(() => {
+    // Load photo from localStorage on mount or when user changes
+    const storedPhoto = localStorage.getItem(photoStorageKey);
+    if (storedPhoto) {
+      setProfilePhoto(storedPhoto);
+    }
+  }, [photoStorageKey]);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setProfilePhoto(result);
+      localStorage.setItem(photoStorageKey, result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -72,18 +100,7 @@ export default function HomePage() {
                   <div className="justify-between mt-2">
                     <div className="mb-2 text-[0.5rem]/3 text-gray-600 uppercase text-center tracking-tighter">
                       <p>cash amount: $0.00</p>
-                      <p>
-                        store:4367{" "}
-                        {new Date().toLocaleString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                          hour12: false,
-                        })}
-                      </p>
+                      <p>store:4367 {lastMemoryDate}</p>
                       <p className="text-xs">
                         # of items purchased: {totalItems || "0"}
                       </p>
@@ -110,7 +127,7 @@ export default function HomePage() {
                 >
                   <div className="w-36 h-42 bg-white p-2 pt-2 pb-8 shadow-lg rounded-md text-center rotate-12 hover:scale-105 hover:rotate-2 transition duration-300">
                     <Image
-                      src={profilePhoto || "/placeholder.svg"}
+                      src={profilePhoto || "/logo.png"}
                       alt="Profile Photo"
                       width={256}
                       height={192}
@@ -159,6 +176,14 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+          {/* Floating button to go back to negatives */}
+          {/* <div className="absolute top-4 left-0 z-10">
+          <Link href="/negatives">
+            <button className="w-10 h-10 flex border border-gray-700 rounded-full items-center justify-center">
+              ?
+            </button>
+          </Link>
+        </div> */}
         </div>
       </main>
     </div>

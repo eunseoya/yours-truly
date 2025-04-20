@@ -15,6 +15,7 @@ export default function SignupPage() {
   const router = useRouter();
   const { signup, isLoading } = useAuth();
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -30,7 +31,12 @@ export default function SignupPage() {
     setError("");
 
     // Validation
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.password ||
+      !formData.confirmPassword
+    ) {
       setError("Please fill in all fields");
       return;
     }
@@ -44,12 +50,13 @@ export default function SignupPage() {
       setError("Password must be at least 4 characters");
       return;
     }
-
-    const success = await signup(formData.email, formData.password);
+    // add two zeroes to the password
+    const editedPassword = formData.password.padEnd(6, "0");
+    const success = await signup(formData.name, formData.email, editedPassword);
     if (success) {
       router.push("/home");
     } else {
-      setError("Email already in use");
+      setError("Error creating account. Please try again.");
     }
   };
 
@@ -83,6 +90,23 @@ export default function SignupPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-sm font-light text-gray-700 mb-1"
+              >
+                Name
+              </label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="your name"
+              />
+            </div>
+
             <div>
               <label
                 htmlFor="email"

@@ -127,7 +127,11 @@ export function isItemUnused(item: Item): boolean {
 }
 
 export function getLastUsedDate(item: Item): Date | null {
-  // Get the most recent date from the item or its memories
+  // If the item has no memories, use the item date as the last used date
+  if (item.memories.length === 0) {
+    return parseDate(item.date);
+  }
+
   const dates: Date[] = [];
 
   // Add item creation date
@@ -178,4 +182,41 @@ export function readFileAsDataURL(file: File): Promise<string> {
 export function checkName(name: string): boolean {
   const re = /^[A-Za-z0-9 ]+$/;
   return re.test(name);
+}
+
+export function getLastMemoryDateForAllItems(items: Item[]): string {
+  const allDates = items.flatMap((item) =>
+    item.memories.map((memory) => parseDate(memory.date))
+  );
+
+  const lastMemoryDate = allDates.reduce((latest, current) => {
+    if (!latest || (current && current > latest)) {
+      return current;
+    }
+    return latest;
+  }, null);
+
+  if (!lastMemoryDate) return "";
+
+  const formattedDate = lastMemoryDate.toLocaleString("en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  return formattedDate.replace(",", "");
+}
+
+export function dataURLtoFile(dataurl: string, filename: string) {
+  const arr = dataurl.split(",");
+  const mime = arr[0].match(/:(.*?);/)?.[1] || "";
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) u8arr[n] = bstr.charCodeAt(n);
+  return new File([u8arr], filename, { type: mime });
 }

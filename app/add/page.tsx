@@ -7,19 +7,22 @@ import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useItems } from "@/hooks/use-items";
-import { readFileAsDataURL } from "@/lib/utils";
-
+import { usePhotoUpload } from "@/hooks/use-photo-upload";
+import { dataURLtoFile } from "@/lib/utils";
+import { useCameraPhotoListener } from "@/hooks/use-camera-photo-listener";
 function AddItemPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addItem } = useItems();
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const { photo, handlePhotoUpload } = usePhotoUpload();
   const [formData, setFormData] = useState({
     name: "",
     date: "",
     from: "",
     story: "",
   });
+
+  useCameraPhotoListener(handlePhotoUpload, "photo.png");
 
   useEffect(() => {
     const nameFromQuery = searchParams.get("name");
@@ -32,32 +35,13 @@ function AddItemPageContent() {
         ? localStorage.getItem("yours-truly-captured-photo")
         : null;
     if (localPhoto) {
-      setImagePreview(localPhoto);
+      handlePhotoUpload({
+        target: { files: [dataURLtoFile(localPhoto, "photo.png")] },
+      } as any);
       localStorage.removeItem("yours-truly-captured-photo");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
-
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === "camera-photo" && event.data.photo) {
-        setImagePreview(event.data.photo);
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, []);
-
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const dataUrl = await readFileAsDataURL(file);
-      setImagePreview(dataUrl);
-    }
-  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -70,14 +54,13 @@ function AddItemPageContent() {
     e.preventDefault();
 
     if (formData.name && formData.date) {
-      // Pass only the chosen date, provider will merge with current time
       const newItem = {
         id: Date.now().toString(),
         name: formData.name,
         date: formData.date,
         from: formData.from,
         story: formData.story,
-        image: imagePreview || "/logo.svg?height=300&width=300",
+        image: photo || "/logo.svg?height=300&width=300",
         memories: [],
       };
 
@@ -91,14 +74,14 @@ function AddItemPageContent() {
       <form onSubmit={handleSubmit} className="space-y-6 p-8">
         <div className="flex justify-center mb-6">
           <div className="polaroid w-64 h-96 pb-2">
-            {imagePreview ? (
+            {photo && photo !== "/logo.png" ? (
               <div className="relative w-full h-full">
                 <label
                   htmlFor="image-upload"
                   className="block w-full h-full cursor-pointer"
                 >
                   <Image
-                    src={imagePreview}
+                    src={photo}
                     alt="Item preview"
                     fill
                     className="object-cover w-full h-full"
@@ -108,7 +91,7 @@ function AddItemPageContent() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handleImageChange}
+                    onChange={handlePhotoUpload}
                   />
                 </label>
               </div>
@@ -121,7 +104,7 @@ function AddItemPageContent() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handleImageChange}
+                    onChange={handlePhotoUpload}
                   />
                 </label>
               </div>
@@ -178,9 +161,9 @@ function AddItemPageContent() {
           </div>
 
           <div className="relative flex justify-center mt-6">
-             <button className="w-12 h-12 rounded-full border border-gray-500 flex items-center justify-center">
-                  <Plus className="h-10 w-10 stroke-[0.5]" />
-                </button>
+            <button className="w-12 h-12 rounded-full border border-gray-500 flex items-center justify-center">
+              <Plus className="h-10 w-10 stroke-[0.5]" />
+            </button>
           </div>
         </div>
       </form>

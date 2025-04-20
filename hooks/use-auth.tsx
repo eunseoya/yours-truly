@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 
 type User = {
   id: string
@@ -25,14 +25,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
-  // localStorage.clear();
-  // Load user from localStorage on mount
+  const supabase = createClient()
+
+  // Load user from Supabase on mount and listen for auth state changes
   useEffect(() => {
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    const getUser = async () => {
+      setIsLoading(true)
+      const { data, error } = await supabase.auth.getUser()
+      if (data?.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email ?? "",
+        })
+      } else {
+        setUser(null)
+      }
+      setIsLoading(false)
     }
-    setIsLoading(false)
+    getUser()
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email ?? "",
+        })
+      } else {
+        setUser(null)
+      }
+    })
+    return () => {
+      listener?.subscription.unsubscribe()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Check if user is authenticated and redirect if needed
@@ -40,7 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isLoading) {
       const publicPaths = ["/", "/login", "/signup"]
       const isPublicPath = publicPaths.includes(pathname)
-
       if (!user && !isPublicPath) {
         router.push("/login")
       }
@@ -48,75 +72,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, isLoading, pathname, router])
 
   const login = async (email: string, password: string) => {
-    // In a real app, this would be an API call
     setIsLoading(true)
-
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      // Check if user exists in localStorage
-      const users = JSON.parse(localStorage.getItem("users") || "[]")
-      const foundUser = users.find((u: any) => u.email === email && u.password === password)
-
-      if (foundUser) {
-        // Remove password before storing in state
-        const { password, ...userWithoutPassword } = foundUser
-        setUser(userWithoutPassword)
-        localStorage.setItem("user", JSON.stringify(userWithoutPassword))
-        return true
-      }
-
-      return false
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const signup = async (email: string, password: string) => {
-    setIsLoading(true)
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      // Check if user already exists
-      const users = JSON.parse(localStorage.getItem("users") || "[]")
-      const userExists = users.some((u: any) => u.email === email)
-
-      if (userExists) {
-        return false
-      }
-
-      // Create new user
-      const newUser = {
-        id: Date.now().toString(),
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+      })
+      if (error || !data.user) {
+        return false
       }
-
-      // Save to "database"
-      users.push(newUser)
-      localStorage.setItem("users", JSON.stringify(users))
-
-      // Log user in
-      const { password: _, ...userWithoutPassword } = newUser
-      setUser(userWithoutPassword)
-      localStorage.setItem("user", JSON.stringify(userWithoutPassword))
-
+      setUser({
+        id: data.user.id,
+        email: data.user.email ?? "",
+      })
       return true
     } finally {
       setIsLoading(false)
     }
   }
 
-  const logout = () => {
+  const signup = async (name: string, email: string, password: string) => {
+    setIsLoading(true)
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        data: {
+          name,
+        },
+      })
+      if (error || !data.user) {
+        return false
+      }
+      setUser({
+        id: data.user.id,
+        email: data.user.email ?? "",
+        name: data.user.name ?? "",
+      })
+      return true
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const logout = async () => {
+    setIsLoading(true)
+    await supabase.auth.signOut()
     setUser(null)
-    localStorage.removeItem("user")
+    setIsLoading(false)
     router.push("/login")
   }
 
-  return <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

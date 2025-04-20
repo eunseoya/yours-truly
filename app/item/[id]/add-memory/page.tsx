@@ -6,7 +6,9 @@ import Image from "next/image";
 import { Header } from "@/components/header";
 import { Plus } from "lucide-react";
 import { useItems } from "@/hooks/use-items";
-import { readFileAsDataURL } from "@/lib/utils";
+import { usePhotoUpload } from "@/hooks/use-photo-upload";
+import { dataURLtoFile } from "@/lib/utils";
+import { useCameraPhotoListener } from "@/hooks/use-camera-photo-listener";
 
 function AddMemoryPageContent() {
   const router = useRouter();
@@ -15,17 +17,21 @@ function AddMemoryPageContent() {
   const params = useParams();
   const itemId = params.id as string;
 
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const { photo, handlePhotoUpload } = usePhotoUpload("/placeholder.svg");
   const [formData, setFormData] = useState({
     date: "",
     description: "",
   });
 
+  useCameraPhotoListener(handlePhotoUpload, "memory.webp");
+
   useEffect(() => {
     // Pre-fill image from query param if present
     const imageFromQuery = searchParams.get("image");
     if (imageFromQuery) {
-      setImagePreview(imageFromQuery);
+      handlePhotoUpload({
+        target: { files: [dataURLtoFile(imageFromQuery, "memory.webp")] },
+      } as any);
     }
     // Pre-fill image from localStorage if present
     const localPhoto =
@@ -33,32 +39,13 @@ function AddMemoryPageContent() {
         ? localStorage.getItem("yours-truly-captured-photo")
         : null;
     if (localPhoto) {
-      setImagePreview(localPhoto);
+      handlePhotoUpload({
+        target: { files: [dataURLtoFile(localPhoto, "memory.webp")] },
+      } as any);
       localStorage.removeItem("yours-truly-captured-photo");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
-
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === "camera-photo" && event.data.photo) {
-        setImagePreview(event.data.photo);
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, []);
-
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const dataUrl = await readFileAsDataURL(file);
-      setImagePreview(dataUrl);
-    }
-  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -75,7 +62,7 @@ function AddMemoryPageContent() {
         id: Date.now().toString(),
         date: formData.date,
         description: formData.description,
-        image: imagePreview || "/placeholder.svg",
+        image: photo || "/placeholder.svg",
       });
       router.push(`/item/${itemId}`);
     }
@@ -90,10 +77,10 @@ function AddMemoryPageContent() {
               htmlFor="image-upload"
               className="block w-full h-full cursor-pointer"
             >
-              {imagePreview ? (
+              {photo && photo !== "/placeholder.svg" ? (
                 <div className="relative w-full h-full">
                   <Image
-                    src={imagePreview}
+                    src={photo}
                     alt="Memory preview"
                     fill
                     className="object-cover w-full h-full"
@@ -103,7 +90,7 @@ function AddMemoryPageContent() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handleImageChange}
+                    onChange={handlePhotoUpload}
                   />
                 </div>
               ) : (
@@ -114,7 +101,7 @@ function AddMemoryPageContent() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handleImageChange}
+                    onChange={handlePhotoUpload}
                   />
                 </div>
               )}
