@@ -59,6 +59,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
       <Header />
       <main className="container max-w-md mx-auto p-4">
+
         <div className="flex flex-col items-center gap-12">
           <div className="relative w-72 text-center flex justify-center items-center mb-16">
             <div>
@@ -176,14 +177,7 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-          {/* Floating button to go back to negatives */}
-          {/* <div className="absolute top-4 left-0 z-10">
-          <Link href="/negatives">
-            <button className="w-10 h-10 flex border border-gray-700 rounded-full items-center justify-center">
-              ?
-            </button>
-          </Link>
-        </div> */}
+          
         </div>
       </main>
     </div>
