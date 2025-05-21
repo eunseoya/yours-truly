@@ -41,7 +41,7 @@ export default function LoginPage() {
         if (success) {
           router.push("/home");
         } else {
-          setError("Invalid email or passcode");
+          setError("Invalid email or PIN");
           setPassword("");
         }
       }

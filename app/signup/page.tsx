@@ -129,7 +129,7 @@ export default function SignupPage() {
                 htmlFor="password"
                 className="block text-sm font-light text-gray-700 mb-1"
               >
-                Password
+                PIN code
               </label>
               <Input
                 id="password"
@@ -147,7 +147,7 @@ export default function SignupPage() {
                 htmlFor="confirmPassword"
                 className="block text-sm font-light text-gray-700 mb-1"
               >
-                Confirm Password
+                Confirm PIN code
               </label>
               <Input
                 id="confirmPassword"
